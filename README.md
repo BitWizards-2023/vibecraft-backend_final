@@ -46,14 +46,20 @@ This project provides an API for detecting emotions using two methods:
    ```
 2. **Set Up Virtual Environment**:
 
+```bash
 python3 -m venv venv
 source venv/bin/activate # Linux/MacOS
 On Windows: venv\Scripts\activate
+```
 
 3. **Install Dependencies:**:
+   ```bash
    pip install -r requirements.txt
+   ```
 4. **Set Up Environment Variables:**:
+   ```bash
    Create a .env file in the project root and add your OpenAI API key
    touch .env
    Add the following content:
    OPENAI_API_KEY=your_openai_api_key_here
+   ```

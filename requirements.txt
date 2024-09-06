@@ -1,8 +1,11 @@
-fastapi==0.65.1
-uvicorn==0.14.0
-openai==0.10.2
-pydantic==1.8.2
-joblib==1.0.1
-numpy==1.21.0
-scikit-learn==0.24.2
-python-dotenv==0.19.0  # For environment variables
+# Core project dependencies
+fastapi==0.114.0            # FastAPI for building APIs
+uvicorn==0.30.6             # Uvicorn ASGI server
+openai==1.44.0              # OpenAI API client
+pydantic==2.9.0             # Pydantic for data validation
+joblib==1.4.2               # Joblib for saving/loading machine learning models
+numpy==2.1.1                # Numpy for numerical operations
+scikit-learn==1.5.1         # Scikit-learn for machine learning algorithms
+python-dotenv==1.0.1        # For environment variables in .env files
+setuptools==74.1.2          # Ensures compatibility with Python builds
+wheel==0.44.0               # For building and installing Python wheels

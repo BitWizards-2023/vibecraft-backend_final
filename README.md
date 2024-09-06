@@ -49,7 +49,7 @@ This project provides an API for detecting emotions using two methods:
 ```bash
    python3 -m venv venv
    source venv/bin/activate # Linux/MacOS
-   On Windows: venv\Scripts\activate
+  venv\Scripts\activate #Windows
 ```
 
 3. **Install Dependencies:**:

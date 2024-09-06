@@ -46,11 +46,11 @@ This project provides an API for detecting emotions using two methods:
    ```
 2. **Set Up Virtual Environment**:
 
-```bash
+   ```bash
    python3 -m venv venv
    source venv/bin/activate # Linux/MacOS
-  venv\Scripts\activate #Windows
-```
+   venv\Scripts\activate #Windows
+   ```
 
 3. **Install Dependencies:**:
    ```bash

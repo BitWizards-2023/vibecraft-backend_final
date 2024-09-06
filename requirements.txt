@@ -9,3 +9,4 @@ scikit-learn==1.5.1         # Scikit-learn for machine learning algorithms
 python-dotenv==1.0.1        # For environment variables in .env files
 setuptools==74.1.2          # Ensures compatibility with Python builds
 wheel==0.44.0               # For building and installing Python wheels
+pydantic-settings==2.0.3    # Pydantic settings for environment configuration

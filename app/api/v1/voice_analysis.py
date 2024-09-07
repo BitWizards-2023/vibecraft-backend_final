@@ -10,8 +10,12 @@ import shutil
  
 app = APIRouter()
  
-# Define the path to the model
-model_path = os.path.join(os.path.dirname(__file__), './Emotion_Voice_Detection_MLPClassifier_Model.pkl')
+# Get the absolute path of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Model paths and loading
+model_path = os.path.join(
+    current_dir, '../../model/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
  
 # Ensure the model file exists
 if not os.path.exists(model_path):

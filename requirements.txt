@@ -10,4 +10,7 @@ python-dotenv==1.0.1        # For environment variables in .env files
 setuptools==74.1.2          # Ensures compatibility with Python builds
 wheel==0.44.0               # For building and installing Python wheels
 pydantic-settings==2.0.3    # Pydantic settings for environment configuration
-xgboost==2.1.1              # XGBoost machine learning model            
+xgboost==2.1.1              # XGBoost machine learning model    
+pandas
+matplotlib 
+seaborn     

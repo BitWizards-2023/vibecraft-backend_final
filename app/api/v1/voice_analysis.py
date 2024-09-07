@@ -14,8 +14,10 @@ app = APIRouter()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Model paths and loading
+# Corrected model path
 model_path = os.path.join(
-    current_dir, '../../model/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
+    current_dir, '../../models/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
+
  
 # Ensure the model file exists
 if not os.path.exists(model_path):
@@ -93,34 +95,63 @@ def extract_features(file_path):
     # Extract features from audio file
     features = extract_feature(file_path)
     return np.expand_dims(features, axis=0)  # Add batch dimension
- 
+
+
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
+        # Define the upload directory
+        upload_path = os.path.join(current_dir, '../../uploads')
+
+        # Ensure the upload directory exists or create it
+        try:
+            os.makedirs(upload_path, exist_ok=True)
+        except OSError as e:
+            raise HTTPException(
+                status_code=500, detail=f"Failed to create directory: {str(e)}")
+
+        # Define the full file path
+        file_path = os.path.join(upload_path, file.filename)
+
         # Save the file temporarily
-        file_path = f"uploads/{file.filename}"
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
- 
+
         # Extract features
         features = extract_features(file_path)
+
         # Ensure the features are in the correct shape
         if features.shape[1] != model.n_features_in_:
-            raise ValueError(f"Feature shape mismatch: expected {model.n_features_in_}, got {features.shape[1]}")
- 
+            raise ValueError(
+                f"Feature shape mismatch: expected {model.n_features_in_}, got {features.shape[1]}")
+
         # Make the prediction
         prediction = model.predict(features)
- 
-        # Determine the predicted emotion
-        predicted_emotion = emotions[str(prediction[0]).zfill(2)]
- 
+        print(prediction)
+
+        # Ensure the prediction is properly handled
+        prediction_value = prediction[0]
+        
+
+        # If the prediction is numeric (as expected)
+        if isinstance(prediction_value, (int, np.integer)):
+            predicted_emotion = emotions.get(
+                str(prediction_value).zfill(2), "Unknown")
+        # If the prediction returns a string (e.g., 'surprised')
+        elif isinstance(prediction_value, str):
+            predicted_emotion = prediction_value
+        else:
+            raise ValueError(
+                f"Unexpected prediction format: {prediction_value}")
+
         # Clean up the uploaded file
         os.remove(file_path)
- 
+
         return JSONResponse(content={"emotion": predicted_emotion})
- 
+
     except Exception as e:
         # Clean up the uploaded file if an error occurs
         if os.path.exists(file_path):
             os.remove(file_path)
-        raise HTTPException(status_code=500, detail=f"Error during prediction: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error during prediction: {str(e)}")

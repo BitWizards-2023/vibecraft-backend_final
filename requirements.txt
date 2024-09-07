@@ -14,8 +14,5 @@ xgboost==2.1.1              # XGBoost machine learning model
 pandas                      # Pandas for data manipulation
 matplotlib                  # Matplotlib for plotting
 seaborn                     # Seaborn for statistical data visualization
- 
-# Additional dependencies for audio processing
 soundfile                   # Soundfile for reading and writing audio files
-librosa==0.10.2.post1       # Librosa for audio feature extraction
 pydub                       # Pydub for working with audio files like .m4a

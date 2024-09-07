@@ -3,11 +3,11 @@ import joblib
 import numpy as np
 import os
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
-app = FastAPI()
+app = APIRouter()
 
 # Get the absolute path of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI, APIRouter
 from app.api.v1.typing_analysis import router as typing_analysis_router
-from app.api.v1.music_recomondation_routes import feedback, feature_importance, get_songs, initialize_cold_start, recommend
+from app.api.v1.music_recomondation_routes import feedback, get_songs, initialize_cold_start, recommend, feature_importance
 from app.core.config import settings
 import uvicorn
 import threading

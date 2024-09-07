@@ -25,12 +25,9 @@ async def analyze_text_with_openai(text: str):
         # Call OpenAI's Chat API for emotion detection using GPT-4
         response = client.chat.completions.create(
             model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
-        )
+            messages=[{"role": "user", "content": prompt}]        )
 
-        # Log the entire response from OpenAI for debugging purposes
-        print(f"OpenAI API Response: {response}")
-
+      
         # Correctly access the content of the message using dot notation
         emotion = response.choices[0].message.content.strip().lower()
 

@@ -11,6 +11,11 @@ setuptools==74.1.2          # Ensures compatibility with Python builds
 wheel==0.44.0               # For building and installing Python wheels
 pydantic-settings==2.0.3    # Pydantic settings for environment configuration
 xgboost==2.1.1              # XGBoost machine learning model    
-pandas
-matplotlib 
-seaborn     
+pandas                      # Pandas for data manipulation
+matplotlib                  # Matplotlib for plotting
+seaborn                     # Seaborn for statistical data visualization
+ 
+# Additional dependencies for audio processing
+soundfile                   # Soundfile for reading and writing audio files
+librosa==0.10.2.post1       # Librosa for audio feature extraction
+pydub                       # Pydub for working with audio files like .m4a

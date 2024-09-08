@@ -1,20 +1,23 @@
-from app.api.v1.music_recommendation import MusicRecommendationDoubleQL
+
 import joblib
 import numpy as np
 import os
 import pandas as pd
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-app = APIRouter()
+from app.api.v1.music_recommendation import MusicRecommendationDoubleQL
 
+app = APIRouter()
 # Get the absolute path of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Model paths and loading
+# Corrected model path
 model_path = os.path.join(
-    current_dir, '../../model/music_recommendation_model.pkl')
+    current_dir, '../../models/music_recommendation_model.pkl')
+
 if os.path.exists(model_path):
     loaded_model = joblib.load(model_path)
     print("Loaded existing model")
@@ -28,18 +31,18 @@ else:
     labels = df['labels'].unique()
     loaded_model = MusicRecommendationDoubleQL(
         df, state_dim, action_dim, labels)
-    print("Created new model2")
+    print("Created new model")
 
 # Pydantic models for request and response
 
 
 class RecommendRequest(BaseModel):
-    emotion: str
+    emotion: int
 
 
 class RecommendResponse(BaseModel):
     recommended_music: str
-    emotion: str
+    emotion: int
     action_index: float
 
 # Endpoint for music recommendation
@@ -50,25 +53,39 @@ async def recommend(request: RecommendRequest):
     try:
         emotion = request.emotion
         mapped_emotion = loaded_model.map_emotion_to_action(emotion)
-        print(f"Mapped emotion {emotion} to action {mapped_emotion}")
+
+        if mapped_emotion == -1:
+            raise HTTPException(
+                status_code=400, detail="Invalid emotion provided")
 
         recommended_music, action_index = loaded_model.recommend_music(
             mapped_emotion)
         action_index = float(action_index)
 
         return {"recommended_music": recommended_music, "emotion": emotion, "action_index": action_index}
+    except ValueError as ve:
+        # Handling ValueErrors like NaN
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         print(f"Error during recommendation: {e}")
         raise HTTPException(status_code=500, detail="An error occurred")
 
-# Endpoint for feedback
+
+
+class FeedbackRequest(BaseModel):
+    track: str
+    feedback: float
+    playback_duration: float
+    total_duration: float
+    emotion: int
+    action: int
 
 
 @app.post("/feedback")
-async def feedback(data: dict):
+async def feedback(request: FeedbackRequest):
     try:
-        print("Received feedback data:", data)
-        track_value = data.get('track', '').strip()
+        print("Received feedback data:", request.dict())
+        track_value = request.track.strip()
 
         if 'track' not in loaded_model.df.columns:
             raise HTTPException(
@@ -84,18 +101,18 @@ async def feedback(data: dict):
         track_features = track_data[loaded_model.features].values[0].reshape(
             1, -1)
 
-        feedback_reward = loaded_model.process_feedback(data['feedback'])
+        feedback_reward = loaded_model.process_feedback(request.feedback)
         duration_reward = loaded_model.process_playback_duration(
-            data['playback_duration'], data['total_duration'])
+            request.playback_duration, request.total_duration)
         feature_reward = loaded_model.compute_feature_based_reward(
             track_features)
 
         total_reward = feedback_reward + duration_reward + feature_reward
         next_emotional_state = np.random.randint(3)
 
-        state_index = int(data['emotion'])
-        action = int(data['action'])
-        next_state_index = int(next_emotional_state)
+        state_index = request.emotion
+        action = request.action
+        next_state_index = next_emotional_state
 
         loaded_model.update_high_reward_features(track_features, total_reward)
         loaded_model.update_Q(state_index, action,
@@ -115,7 +132,7 @@ async def feedback(data: dict):
 
 
 @app.get("/get-songs")
-async def get_songs(num_songs: int = Query(5, description="Number of songs to fetch")):
+async def get_songs(num_songs: int = Query(10, description="Number of songs to fetch")):
     try:
         song_sample = loaded_model.df.sample(n=num_songs)
         song_list = song_sample[['track']].to_dict(orient='records')
@@ -125,7 +142,7 @@ async def get_songs(num_songs: int = Query(5, description="Number of songs to fe
         raise HTTPException(
             status_code=500, detail="An error occurred while fetching songs.")
 
-# Pydantic model for cold start
+# Cold start initialization request and response models
 
 
 class ColdStartRequest(BaseModel):
@@ -197,10 +214,8 @@ class FeatureImportanceRequest(BaseModel):
 async def feature_importance(request: FeatureImportanceRequest):
     try:
         # Extract the values and create the input array (assuming all values are valid floats)
-        X = np.array([[request.duration_reward,
-                       request.feedback_reward,
-                       request.feature_reward,
-                       request.total_reward]])
+        X = np.array([[request.duration_reward, request.feedback_reward,
+                     request.feature_reward, request.total_reward]])
 
         print("Data for feature value computation:", X)
 

@@ -4,8 +4,8 @@ uvicorn==0.30.6             # Uvicorn ASGI server
 openai==1.44.0              # OpenAI API client
 pydantic==2.9.0             # Pydantic for data validation
 joblib==1.4.2               # Joblib for saving/loading machine learning models
-numpy==2.1.1                # Numpy for numerical operations
-scikit-learn==1.5.1         # Scikit-learn for machine learning algorithms
+numpy==1.26.4                  # Numpy for numerical operations
+scikit-learn==1.3.2         # Scikit-learn for machine learning algorithms
 python-dotenv==1.0.1        # For environment variables in .env files
 setuptools==74.1.2          # Ensures compatibility with Python builds
 wheel==0.44.0               # For building and installing Python wheels
@@ -16,3 +16,4 @@ matplotlib                  # Matplotlib for plotting
 seaborn                     # Seaborn for statistical data visualization
 soundfile                   # Soundfile for reading and writing audio files
 pydub                       # Pydub for working with audio files like .m4a
+python-multipart

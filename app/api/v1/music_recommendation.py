@@ -192,7 +192,7 @@ class MusicRecommendationDoubleQL:
         print("State Index:", state_index)
  
         # Use the state_index to get the action
-        action = np.argmax(self.Q1[state_index] + self.Q2[state_index])
+        action = self.choose_action(emotional_state)
         print("Action:", action)
  
         # Ensure that action is an integer

@@ -15,7 +15,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Model paths and loading
 model_path = os.path.join(
-    current_dir, '../../model/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
+    current_dir, '../../models/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
  
 # Ensure the model file exists
 if not os.path.exists(model_path):

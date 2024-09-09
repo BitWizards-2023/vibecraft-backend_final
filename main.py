@@ -1,8 +1,9 @@
 import logging
 from fastapi import FastAPI, APIRouter
-from app.api.v1.typing_analysis import router as typing_analysis_router
+# from app.api.v1.typing_analysis import router as typing_analysis_router
 from app.api.v1.music_recomondation_routes import app as music_recomondation_router
 from app.api.v1.voice_analysis import app as voice_analysis_router
+from app.api.v1.book_recomondation import app as book_recomondation_router
 from app.core.config import settings
 import uvicorn
 import threading
@@ -18,9 +19,11 @@ app = FastAPI(title=settings.app_name)
 common_router = APIRouter()
 
 # Include individual routers in the common router
-common_router.include_router(typing_analysis_router, prefix="/typing_analysis")
+# common_router.include_router(typing_analysis_router, prefix="/typing_analysis")
 common_router.include_router(
     music_recomondation_router, prefix="/music_recomondation")
+common_router.include_router(
+    book_recomondation_router, prefix="/book_recommendation")
 common_router.include_router(
     voice_analysis_router, prefix="/voice_analyse"
 )

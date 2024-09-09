@@ -66,3 +66,10 @@ staticfiles/
 # Test outputs
 .tox/
 noxfile.py
+
+# Ignore the music recommendation model
+models/music_recommendation_model.pkl
+
+# Ignore the feature importance heatmap image
+feature_importance_heatmap.png
+

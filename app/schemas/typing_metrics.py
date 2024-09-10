@@ -48,4 +48,5 @@ class TypingData(BaseModel):
     text_input:str
 
 class AnalysisResult(BaseModel):
-    analysis: Any
+    emotion: str
+

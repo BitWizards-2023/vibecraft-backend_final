@@ -33,7 +33,7 @@ class TypingController:
                 
                 # Step 2: If emotion detected from text, return the result
                 if emotion != "unidentified":
-                    return {"analysis": {"detected_emotion": emotion}}
+                    return {"emotion": emotion}
                 elif emotion == "unidentified":
                     # Step 3: If emotion not identified, analyze typing dynamics
                     typing_features = [
@@ -56,7 +56,7 @@ class TypingController:
                     
                     # Step 4: Pass the typing dynamics features to the model
                     emotion = detect_emotion_with_typing_dynamics(typing_features)
-                    return {"analysis": {"detected_emotion": emotion}}
+                    return {"emotion": emotion}
                 
         except HTTPException as e:
             logger.error(f"Error during emotion detection: {e.detail}")

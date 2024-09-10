@@ -16,7 +16,7 @@ async def analyze_text_with_openai(data):
     try:
         # Optimized prompt for detecting emotions
         prompt = f"""
-        Provide only the emotion label ex-"emotion":"label".
+        Provide only the emotion label ex-"label".
         Analyze the emotional tone of the following text and classify it as one of the following emotions: 'happy', 'sad', 'angry', 'calm', 'neutral'. 
         If the text is mining less Analyze the emotional tone of the following text and classify it as one of the following emotions: 
         'happy', 'sad', 'angry', 'calm', or 'neutral'. If the text does not clearly convey an emotion or is meaningless, 
@@ -34,7 +34,7 @@ async def analyze_text_with_openai(data):
         """
     
 
-        print(prompt)
+        
         # Call OpenAI's Chat API for emotion detection using GPT-4
         response = client.chat.completions.create(
             model="gpt-4",
@@ -42,11 +42,13 @@ async def analyze_text_with_openai(data):
 
       
         # Correctly access the content of the message using dot notation
-        emotion = response.choices[0].message.content.strip().lower()
+         # Extract the emotion from the response
+        emotion_label = response.choices[0].message.content.strip().lower()
+        print(response)
 
         # Return the extracted emotion in a flat structure
         return {
-            "emotion": emotion
+            "emotion": emotion_label
         }
 
     except Exception as e:

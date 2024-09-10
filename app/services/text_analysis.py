@@ -7,7 +7,7 @@ from openai import OpenAI
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # Set up logging
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 async def analyze_text_with_openai(data):
     """

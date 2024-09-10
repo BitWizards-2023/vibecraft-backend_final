@@ -54,7 +54,7 @@ async def analyze_text_with_openai(data):
         Provide only the emotion label.
    
         """
-        print(emotion)
+    
 
         print(prompt)
         # Call OpenAI's Chat API for emotion detection using GPT-4

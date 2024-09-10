@@ -7,9 +7,9 @@ import os
 import librosa
 from pydub import AudioSegment
 import shutil
- 
+
 app = APIRouter()
- 
+
 # Get the absolute path of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,14 +18,13 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 model_path = os.path.join(
     current_dir, '../../models/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
 
- 
 # Ensure the model file exists
 if not os.path.exists(model_path):
     raise FileNotFoundError(f"The model file at {model_path} does not exist.")
- 
+
 # Load the trained model
 model = joblib.load(model_path)
- 
+
 # Emotions in the RAVDESS dataset
 emotions = {
     '01': 'neutral',
@@ -37,10 +36,10 @@ emotions = {
     '07': 'disgust',
     '08': 'surprised'
 }
- 
+
 # These are the emotions the user wants to observe more
 observed_emotions = list(emotions.values())
- 
+
 # Function to extract features
 def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
     try:
@@ -49,7 +48,7 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
             audio = AudioSegment.from_file(file_name, format="m4a")
             samples = np.array(audio.get_array_of_samples(), dtype=np.float32)
             sample_rate = audio.frame_rate
- 
+
             # Normalize the audio data
             if audio.channels == 2:
                 samples = samples.reshape((-1, 2))
@@ -59,26 +58,26 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
             with sf.SoundFile(file_name) as sound_file:
                 X = sound_file.read(dtype="float32")
                 sample_rate = sound_file.samplerate
- 
+
         feature_list = []
         if chroma:
             stft = np.abs(librosa.stft(X, n_fft=min(2048, len(X))))
- 
+
         if mfcc:
             mfccs = np.mean(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=40).T, axis=0)
             feature_list.append(mfccs)
- 
+
         if chroma:
             chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sample_rate).T, axis=0)
             feature_list.append(chroma)
- 
+
         if mel:
             mel = np.mean(librosa.feature.melspectrogram(y=X, sr=sample_rate).T, axis=0)
             feature_list.append(mel)
- 
+
         # Concatenate all features
         result = np.concatenate(feature_list, axis=0)
- 
+
         # Adjust feature length to a fixed size (180)
         expected_shape = 180
         if result.shape[0] < expected_shape:
@@ -86,16 +85,33 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
             result = np.concatenate((result, padding))
         elif result.shape[0] > expected_shape:
             result = result[:expected_shape]
- 
+
         return result
     except Exception as e:
         raise Exception(f"Error extracting features from audio: {e}")
- 
+
+# Function to check if the audio has significant features
+def is_silent_or_low_energy(features, threshold=0.01):
+    variance = np.var(features)
+    if variance < threshold:
+        return True
+    return False
+
+def is_silent_or_low_energy_signal(signal, threshold=1e-4):
+    energy = np.sum(signal**2)
+    if energy < threshold:
+        return True
+    return False
+
 def extract_features(file_path):
     # Extract features from audio file
     features = extract_feature(file_path)
+    
+    # Check for silent or low-energy audio
+    if is_silent_or_low_energy(features) or is_silent_or_low_energy_signal(features):
+        return None  # Indicate no valid features extracted
+    
     return np.expand_dims(features, axis=0)  # Add batch dimension
-
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
@@ -120,6 +136,11 @@ async def predict(file: UploadFile = File(...)):
         # Extract features
         features = extract_features(file_path)
 
+        # Handle the case where no valid features were extracted
+        if features is None:
+            os.remove(file_path)
+            return JSONResponse(content={"emotion": "No significant features detected. Please provide a clearer audio sample."})
+
         # Ensure the features are in the correct shape
         if features.shape[1] != model.n_features_in_:
             raise ValueError(
@@ -132,7 +153,6 @@ async def predict(file: UploadFile = File(...)):
         # Ensure the prediction is properly handled
         prediction_value = prediction[0]
         
-
         # If the prediction is numeric (as expected)
         if isinstance(prediction_value, (int, np.integer)):
             predicted_emotion = emotions.get(

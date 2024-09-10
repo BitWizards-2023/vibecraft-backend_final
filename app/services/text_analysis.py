@@ -16,6 +16,7 @@ async def analyze_text_with_openai(data):
     try:
         # Optimized prompt for detecting emotions
         prompt = f"""
+        Provide only the emotion label.
         Analyze the emotional tone of the following text and classify it as one of the following emotions: 'happy', 'sad', 'angry', 'calm', 'neutral'. 
         If the text is mining less Analyze the emotional tone of the following text and classify it as one of the following emotions: 
         'happy', 'sad', 'angry', 'calm', or 'neutral'. If the text does not clearly convey an emotion or is meaningless, 
@@ -24,7 +25,6 @@ async def analyze_text_with_openai(data):
         emotion based on similarities in typing speed, keystroke intervals, backspace usage, and other relevant pattern features.
         Return only the detected emotion.send only emotion.do not send any other texts analyze the typing patterns.if you cannot 
         identified emotion clearly send it as a happy
-        Provide only the emotion label.
         Text: "{data.text_input}"
         Happy:{{D1D2_mean: 371.68888888888887, D1D2_std: 163.2681502586738, D1U1_mean: 371.68888888888887, D1U1_std: 163.2681502586738, D1U2_mean: 747.1590909090909, D1U2_std: 211.48081795670348, U1D2_mean: 375.1136363636364, U1D2_std: 163.50757558207286, U1U2_mean: 375.1136363636364, U1U2_std: 163.50757558207286, DelFreq: 2, nbKeystroke: 46, leftFreq: 2}}
         Angry: {{D1D2_mean: 309.5903614457831, D1D2_std: 261.187395219767, D1U1_mean: 309.5903614457831, D1U1_std: 261.187395219767, D1U2_mean: 619.4634146341464, D1U2_std: 443.2363791532437, U1D2_mean: 310.0243902439024, U1D2_std: 262.7454949603346, U1U2_mean: 310.0243902439024, U1U2_std: 262.7454949603346, DelFreq: 21, nbKeystroke: 84, leftFreq: 21}}

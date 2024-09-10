@@ -28,14 +28,12 @@ async def analyze_text_with_openai(data):
             Keystroke Count (nbKeystroke): Higher overall keystroke count if they're typing quickly, but with fewer corrections.
         2. Angry:
             Typing Features: {{D1D2_mean: 309.5903614457831, D1D2_std: 261.187395219767, D1U1_mean: 309.5903614457831, D1U1_std: 261.187395219767, D1U2_mean: 619.4634146341464, D1U2_std: 443.2363791532437, U1D2_mean: 310.0243902439024, U1D2_std: 262.7454949603346, U1U2_mean: 310.0243902439024, U1U2_std: 262.7454949603346, DelFreq: 21, nbKeystroke: 84, leftFreq: 21, text_input: the quick brown fox jump over the lazy dog}}
-I/flutter (21918): Data sent successfully: {"emotion":"neutral"}
             Typing Speed: An angry person might type erratically—either much faster or harder, with more force applied to keys.
             Keystroke Intervals (D1D2, U1D2): The intervals may vary significantly. You could see shorter or inconsistent key press intervals as they may hit keys with more force or aggression.
             Backspace Usage (delFreq): High frequency of backspace use as an angry person may make more errors due to aggressive typing.
             Keystroke Count (nbKeystroke): High keystroke count due to aggressive, quick typing, but possibly also high error rates.
         3. Sad:
             {{D1D2_mean: 462.5542168674699, D1D2_std: 478.7934132066987, D1U1_mean: 462.5542168674699, D1U1_std: 478.7934132066987, D1U2_mean: 928.1829268292682, D1U2_std: 674.4369286536046, U1D2_mean: 463.5, U1D2_std: 481.6272721392474, U1U2_mean: 463.5, U1U2_std: 481.6272721392474, DelFreq: 21, nbKeystroke: 84, leftFreq: 21, text_input: the quick brown fox jump over the lazy dog}}
-I/flutter (21918): Data sent successfully: {"emotion":"neutral"}
             Typing Speed: A sad person is likely to type slower, with more hesitation and longer pauses between key presses.
             Keystroke Intervals (D1D2, U1D2): Longer intervals between key presses and releases due to slower typing and hesitation.
             Backspace Usage (delFreq): Increased backspace usage as their slower typing might lead to more self-correction or indecision.
@@ -56,7 +54,9 @@ I/flutter (21918): Data sent successfully: {"emotion":"neutral"}
         Provide only the emotion label.
    
         """
+        print(emotion)
 
+        print(prompt)
         # Call OpenAI's Chat API for emotion detection using GPT-4
         response = client.chat.completions.create(
             model="gpt-4",

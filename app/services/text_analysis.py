@@ -32,8 +32,6 @@ async def analyze_text_with_openai(data):
         calm:{{D1D2_mean: 369.7674418604651, D1D2_std: 187.68881965438382, D1U1_mean: 369.7674418604651, D1U1_std: 187.68881965438382, D1U2_mean: 743.3095238095239, D1U2_std: 277.9257780329815, U1D2_mean: 373.14285714285717, U1D2_std: 188.6158858128137, U1U2_mean: 373.14285714285717, U1U2_std: 188.6158858128137, DelFreq: 1, nbKeystroke: 44, leftFreq: 1}}
         neutral:{{D1D2_mean: 442.1162790697674, D1D2_std: 163.7990828267476, D1U1_mean: 442.1162790697674, D1U1_std: 163.7990828267476, D1U2_mean: 889.1190476190476, D1U2_std: 245.37250593060884, U1D2_mean: 445.4047619047619, U1D2_std: 164.32893841317176, U1U2_mean: 445.4047619047619, U1U2_std: 164.32893841317176, DelFreq: 1, nbKeystroke: 44, leftFreq: 1}}
         """
-    
-
         
         # Call OpenAI's Chat API for emotion detection using GPT-4
         response = client.chat.completions.create(

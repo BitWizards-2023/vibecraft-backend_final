@@ -16,7 +16,7 @@ async def analyze_text_with_openai(data):
     try:
         # Optimized prompt for detecting emotions
         prompt = f"""
-        Provide only the emotion label.
+        Provide only the emotion label ex-"emotion":"label".
         Analyze the emotional tone of the following text and classify it as one of the following emotions: 'happy', 'sad', 'angry', 'calm', 'neutral'. 
         If the text is mining less Analyze the emotional tone of the following text and classify it as one of the following emotions: 
         'happy', 'sad', 'angry', 'calm', or 'neutral'. If the text does not clearly convey an emotion or is meaningless, 

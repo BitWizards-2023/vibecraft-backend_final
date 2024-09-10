@@ -3,7 +3,7 @@ from app.services.text_analysis import analyze_text_with_openai
 from app.services.typing_dyanmics_ml_service import detect_emotion_with_typing_dynamics
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(_name_)
 
 class TypingController:
     """
@@ -27,7 +27,7 @@ class TypingController:
                 logger.info("Analyzing emotion from text input...")
                 
                 # Step 1: Analyze the text using OpenAI's API
-                response = await analyze_text_with_openai(data.text_input)
+                response = await analyze_text_with_openai(data)
                 emotion = response.get('emotion')                
                 print(emotion)
                 
@@ -63,4 +63,4 @@ class TypingController:
             raise e
         except Exception as e:
             logger.error(f"Unexpected error during emotion detection: {e}")
-            raise HTTPException(status_code=500, detail=f"Error during emotion detection: {e}")
+            raise HTTPException(status_code=500, detail=f"Error during emotion detection: {e}")

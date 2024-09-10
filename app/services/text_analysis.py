@@ -43,7 +43,7 @@ async def analyze_text_with_openai(data):
       
         # Correctly access the content of the message using dot notation
          # Extract the emotion from the response
-        emotion_label = response.choices[0].message.content.strip().lower()
+          emotion_label = response.choices[0].message.content.strip().replace("'", "")
         print(response)
 
         # Return the extracted emotion in a flat structure

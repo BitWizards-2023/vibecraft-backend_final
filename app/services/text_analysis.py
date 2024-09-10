@@ -16,16 +16,16 @@ async def analyze_text_with_openai(data):
     try:
         # Optimized prompt for detecting emotions
         prompt = f"""
-        Analyze the emotional tone of the following text and classify it as one of the following emotions: 
+        Analyze the emotional tone of the following text and classify it as one of the following emotions: 'happy', 'sad', 'angry', 'calm', 'neutral'. 
+        If the text is mining less Analyze the emotional tone of the following text and classify it as one of the following emotions: 
         'happy', 'sad', 'angry', 'calm', or 'neutral'. If the text does not clearly convey an emotion or is meaningless, 
         analyze the user's typing dynamics. I will provide you with sample typing dynamics data. Compare this data with 
         predefined emotion-related typing patterns and determine the most closely matching 
         emotion based on similarities in typing speed, keystroke intervals, backspace usage, and other relevant pattern features.
         Return only the detected emotion.send only emotion.do not send any other texts analyze the typing patterns.if you cannot 
         identified emotion clearly send it as a happy
-        sample res send as this way "emotion":"happy".send the replay as a json object do not add any other information 
-        get only emotion key and relative values
-    
+        Provide only the emotion label.
+        Text: "{data.text_input}"
         Happy:{{D1D2_mean: 371.68888888888887, D1D2_std: 163.2681502586738, D1U1_mean: 371.68888888888887, D1U1_std: 163.2681502586738, D1U2_mean: 747.1590909090909, D1U2_std: 211.48081795670348, U1D2_mean: 375.1136363636364, U1D2_std: 163.50757558207286, U1U2_mean: 375.1136363636364, U1U2_std: 163.50757558207286, DelFreq: 2, nbKeystroke: 46, leftFreq: 2}}
         Angry: {{D1D2_mean: 309.5903614457831, D1D2_std: 261.187395219767, D1U1_mean: 309.5903614457831, D1U1_std: 261.187395219767, D1U2_mean: 619.4634146341464, D1U2_std: 443.2363791532437, U1D2_mean: 310.0243902439024, U1D2_std: 262.7454949603346, U1U2_mean: 310.0243902439024, U1U2_std: 262.7454949603346, DelFreq: 21, nbKeystroke: 84, leftFreq: 21}}
         Sad:{{D1D2_mean: 462.5542168674699, D1D2_std: 478.7934132066987, D1U1_mean: 462.5542168674699, D1U1_std: 478.7934132066987, D1U2_mean: 928.1829268292682, D1U2_std: 674.4369286536046, U1D2_mean: 463.5, U1D2_std: 481.6272721392474, U1U2_mean: 463.5, U1U2_std: 481.6272721392474, DelFreq: 21, nbKeystroke: 84, leftFreq: 21}}

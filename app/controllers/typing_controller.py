@@ -3,7 +3,7 @@ from app.services.text_analysis import analyze_text_with_openai
 from app.services.typing_dyanmics_ml_service import detect_emotion_with_typing_dynamics
 import logging
 
-logger = logging.getLogger(_name_)
+logger = logging.getLogger(__name__)
 
 class TypingController:
     """

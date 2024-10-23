@@ -3,6 +3,7 @@ from app.services.text_analysis import analyze_text_with_openai
 from app.services.typing_dyanmics_ml_service import detect_emotion_with_typing_dynamics
 import logging
 
+
 logger = logging.getLogger(__name__)
 
 class TypingController:
@@ -64,3 +65,15 @@ class TypingController:
         except Exception as e:
             logger.error(f"Unexpected error during emotion detection: {e}")
             raise HTTPException(status_code=500, detail=f"Error during emotion detection: {e}")
+        
+    def transcribe_audio(file_path):
+        try:
+            # Open the audio file
+            with open(file_path, "rb") as audio_file:
+                # Send the file to the OpenAI Whisper API
+                transcript = openai.Audio.transcribe("whisper-1", audio_file)
+                return transcript['text']
+        except Exception as e:
+            return f"Error: Unable to process file; {e}"
+
+

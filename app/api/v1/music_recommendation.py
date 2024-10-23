@@ -1,3 +1,4 @@
+import time
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -134,7 +135,7 @@ class MusicRecommendationDoubleQL:
         similarities = cosine_similarity(song_vector, high_reward_matrix)
         amplified_reward = np.mean(similarities) * 10
 
-        return self.adjust_reward(amplified_reward)
+        return amplified_reward
 
     @staticmethod
     def adjust_reward(feature_reward):
@@ -172,46 +173,89 @@ class MusicRecommendationDoubleQL:
             print(
                 f"Updated high reward features with reward {reward} and features {track_features}")
 
-    def recommend_music(self, emotional_state):
+    # def recommend_music(self, emotional_state):
+    #     # Ensure the state vector is properly shaped
+    #     state_vector = self.get_state_vector(
+    #         emotional_state).flatten()  # Properly shape the state vector
+    #     print("State Vector:", state_vector)
+
+    #     # Ensure the state_vector is a 1D array with the correct number of features
+    #     if state_vector.shape[0] != len(self.features):
+    #         raise ValueError(
+    #             f"State vector must have {len(self.features)} features. Got {state_vector.shape[0]} features.")
+
+    #     # Convert state_vector to an index and ensure it's within bounds
+    #     # Pass the feature vector, not an integer
+    #     state_index = self.state_to_index(state_vector)
+    #     # Ensure the index is within bounds
+    #     state_index = state_index % len(self.Q1)
+    #     print("State Index:", state_index)
+
+    #     # Use the state_index to get the action
+    #     # Pass the state_vector to the action
+    #     action = self.choose_action(state_vector)
+    #     print("Action:", action)
+
+    #     # Ensure that action is an integer
+    #     action = int(action)
+
+    #     # Filter tracks based on the action
+    #     filtered_tracks = self.df[self.df['labels'] == action]
+    #     if filtered_tracks.empty:
+    #         raise ValueError(f"No tracks found for action {action}.")
+
+    #     track = filtered_tracks.sample(1)['track'].values[0]
+    #     print("Track:", track)
+
+    #     # Get track features
+    #     track_features = filtered_tracks[filtered_tracks['track']
+    #                                     == track][self.features].values[0]
+    #     print("Track Features:", track_features)
+
+    #     return track, action
+
+    def recommend_music(self, emotional_state, user_genre):
         # Ensure the state vector is properly shaped
         state_vector = self.get_state_vector(emotional_state).flatten()
         print("State Vector:", state_vector)
 
-        # Ensure the state_vector is a 1D array with the correct number of features
+        # Ensure the state_vector has the correct number of features
         if state_vector.shape[0] != len(self.features):
             raise ValueError(
                 f"State vector must have {len(self.features)} features. Got {state_vector.shape[0]} features.")
 
-        # Convert state_vector to an index and ensure it's within bounds
-        state_index = self.state_to_index(state_vector)
-        # Ensure the index is within bounds
-        state_index = state_index % len(self.Q1)
+        # Convert the state vector to an index
+        state_index = self.state_to_index(state_vector) % len(self.Q1)
         print("State Index:", state_index)
 
         # Use the state_index to get the action
-        if np.random.rand() < self.epsilon:
-            # Exploration: choose a random action
-            # Assuming action space size is Q1.shape[1]
-            action = np.random.randint(self.Q1.shape[1])
-            print("Exploring: Chose random action", action)
-        else:
-            # Exploitation: choose the best action based on current Q-values
-            action = np.argmax(self.Q1[state_index] + self.Q2[state_index])
-            print("Exploiting: Chose best action", action)
-            print("Action:", action)
+        action = self.choose_action(state_vector)
+        print("Action:", action)
 
-        # Ensure that action is an integer
+        # Ensure that the action is an integer
         action = int(action)
 
-        # Filter tracks based on the action
-        filtered_tracks = self.df[self.df['labels'] == action]
+        # Filter tracks by the user-specified genre and the corresponding emotion label (action)
+        filtered_tracks = self.df[(self.df['track_genre'] == user_genre) & (
+            self.df['labels'] == action)]
+
+        # If no track is found for the specified genre, fall back to 'Other' genre
         if filtered_tracks.empty:
-            raise ValueError(f"No tracks found for action {action}.")
+            print(
+                f"No tracks found for genre '{user_genre}'. Falling back to 'Other' genre.")
+            filtered_tracks = self.df[(self.df['track_genre'] == 'Other') & (
+                self.df['labels'] == action)]
 
+        # If still no tracks found, raise an error
+        if filtered_tracks.empty:
+            raise ValueError(
+                f"No tracks found even in 'Other' genre for action {action}.")
+
+        # Randomly sample one track from the filtered tracks
         track = filtered_tracks.sample(1)['track'].values[0]
-        print("Track:", track)
+        print("Recommended Track:", track)
 
-        # Get track features
+        # Get the track features for further processing or feedback
         track_features = filtered_tracks[filtered_tracks['track']
                                          == track][self.features].values[0]
         print("Track Features:", track_features)
@@ -278,7 +322,7 @@ class MusicRecommendationDoubleQL:
             values = list(feature_importance.values())
 
             # Adjust figure size for better visualization
-            plt.figure(figsize=(10, 4))
+            plt.figure(figsize=(12, 4))
             plt.barh(features, values, color='skyblue')
             plt.xlabel('Importance')
             plt.ylabel('Features')
@@ -292,9 +336,16 @@ class MusicRecommendationDoubleQL:
             file_path = os.path.join(
                 directory, 'feature_importance_heatmap.png')
 
-            # Save the image file to the current directory
+            # Check if the file already exists, and if so, delete it
+            if os.path.exists(file_path):
+                print(f"File {file_path} already exists. Deleting it.")
+                os.remove(file_path)
+                time.sleep(0.1)
+
+            # Save the new image file
             plt.savefig(file_path)
             print(f"File saved to {file_path}")
             plt.close()
+
         except Exception as e:
             print("Error in plotting function:", str(e))

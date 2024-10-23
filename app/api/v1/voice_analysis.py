@@ -8,7 +8,14 @@ import librosa
 from pydub import AudioSegment
 import shutil
 import speech_recognition as sr
-from app.controllers.typing_controller import TypingController
+from openai import OpenAI  # Ensure you are using openai>=1.0.0 for the updated API
+import logging
+
+# Initialize logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Set your OpenAI API key (ensure to use environment variables for security)
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = APIRouter()
 
@@ -16,7 +23,6 @@ app = APIRouter()
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Model paths and loading
-# Corrected model path
 model_path = os.path.join(
     current_dir, '../../models/Emotion_Voice_Detection_MLPClassifier_Model.pkl')
 
@@ -25,6 +31,7 @@ if not os.path.exists(model_path):
     raise FileNotFoundError(f"The model file at {model_path} does not exist.")
 
 # Load the trained model
+logging.debug(f"Loading model from {model_path}")
 model = joblib.load(model_path)
 
 # Emotions in the RAVDESS dataset
@@ -43,29 +50,82 @@ emotions = {
 observed_emotions = list(emotions.values())
 
 
-def get_raw_text_from_audio(file):
+def get_raw_text_from_audio(file_path):
+    """
+    Transcribes audio to text using speech_recognition.
+    """
     r = sr.Recognizer()
     try:
-        with sr.AudioFile(file) as source:
+        logging.debug(f"Processing audio file for transcription: {file_path}")
+
+        # If not WAV, convert to WAV for processing
+        if not file_path.endswith(".wav"):
+            logging.debug(
+                f"File is not in WAV format. Converting {file_path} to WAV.")
+            audio = AudioSegment.from_file(file_path)
+            wav_file_path = file_path.rsplit(".", 1)[0] + ".wav"
+            audio.export(wav_file_path, format="wav")
+        else:
+            wav_file_path = file_path
+
+        # Recognize speech
+        with sr.AudioFile(wav_file_path) as source:
             audio = r.listen(source)
             try:
+                logging.debug(f"Transcribing audio...")
                 text = r.recognize_google(audio)
+                logging.debug(f"Transcribed text: {text}")
                 return text
             except sr.UnknownValueError:
-                return "Error: Speech not recognized"
+                print("Speech not recognized")
+                return "Error"
             except sr.RequestError as e:
-                return f"Error: Could not request results; {e}"
+                print(f"Google Speech Recognition request error: {e}")
+                return f"Error"
     except Exception as e:
-        return f"Error: Unable to process file; {e}"
+        print(f"Error processing audio file: {e}")
+        return f"Error"
 
-# Function to extract features
+
+def analyze_text_with_openai(text: str):
+    print(f"text {text}")
+    """
+    Analyze the text using OpenAI API and return the detected emotion in a flat structure.
+    """
+    try:
+        # Optimized prompt for detecting emotions
+        prompt = f"""
+        Analyze the emotional tone of the following text and classify it as one of the following emotions: 'happy', 'sad', 'angry', 'calm', 'neutral', 'fearful','disgust', 'suprised'.
+        Provide only the emotion label. 
+        Text: "{text}"
+        """
+
+        # Call OpenAI's Chat API for emotion detection using GPT-4
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        # Correctly access the content of the message using dot notation
+        emotion = response.choices[0].message.content.strip().lower()
+
+        # Return the extracted emotion in a flat structure
+        return {
+            "emotion": emotion
+        }
+
+    except Exception as e:
+        # Log the error if something goes wrong
+        print(f"OpenAI API error: {e}")
+        raise HTTPException(status_code=500, detail=f"OpenAI API error: {e}")
 
 
 def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
+    """
+    Extract features from the audio file for emotion detection.
+    """
     try:
-        print(get_raw_text_from_audio(file_name))
-        transcribed_text = TypingController.transcribe_audio(file_name)
-        print("Transcribed Text:", transcribed_text)
+        logging.debug(f"Extracting features from file: {file_name}")
 
         # Check if the file is in .m4a format and handle it directly
         if file_name.endswith('.m4a'):
@@ -76,13 +136,14 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
             # Normalize the audio data
             if audio.channels == 2:
                 samples = samples.reshape((-1, 2))
-                # Convert to mono by averaging channels
-                samples = samples.mean(axis=1)
+                samples = samples.mean(axis=1)  # Convert to mono
             X = samples / (2 ** 15)  # Convert from 16-bit PCM to float32
         else:
             with sf.SoundFile(file_name) as sound_file:
                 X = sound_file.read(dtype="float32")
                 sample_rate = sound_file.samplerate
+
+        logging.debug(f"Sample rate: {sample_rate}, Signal shape: {X.shape}")
 
         feature_list = []
         if chroma:
@@ -105,6 +166,7 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
 
         # Concatenate all features
         result = np.concatenate(feature_list, axis=0)
+        logging.debug(f"Extracted feature shape: {result.shape}")
 
         # Adjust feature length to a fixed size (180)
         expected_shape = 180
@@ -114,41 +176,30 @@ def extract_feature(file_name, mfcc=True, chroma=True, mel=True):
         elif result.shape[0] > expected_shape:
             result = result[:expected_shape]
 
-        # Check if the feature length exceeds 80
+        # Check if the feature length exceeds 180
         if result.shape[0] > 180:
+            logging.warning(
+                "Extracted feature length exceeds 180. Unable to identify emotion.")
             return None  # Return None to indicate "Unable to identify"
 
         return result
     except Exception as e:
+        print(f"Error extracting features from audio: {e}")
         raise Exception(f"Error extracting features from audio: {e}")
-
-# Function to check if the audio has significant features
-
-
-def is_silent_or_low_energy(features, threshold=0.01):
-    variance = np.var(features)
-    if variance < threshold:
-        return True
-    return False
-
-
-def is_silent_or_low_energy_signal(signal, threshold=1e-4):
-    energy = np.sum(signal**2)
-    if energy < threshold:
-        return True
-    return False
-
-# Function to extract features with validation for the expected shape
 
 
 def extract_features(file_path):
-    # Extract features from audio file
+    """
+    Validates and extracts features from the audio file.
+    """
+    logging.debug(f"Extracting features for file: {file_path}")
     features = extract_feature(file_path)
 
-    # Check for silent or low-energy audio or if shape exceeds 80
-    if features is None or is_silent_or_low_energy(features) or is_silent_or_low_energy_signal(features):
+    if features is None:
+        logging.warning("No valid features extracted. Returning None.")
         return None  # Indicate no valid features extracted
 
+    logging.debug(f"Final extracted features shape: {features.shape}")
     return np.expand_dims(features, axis=0)  # Add batch dimension
 
 
@@ -157,13 +208,8 @@ async def predict(file: UploadFile = File(...)):
     try:
         # Define the upload directory
         upload_path = os.path.join(current_dir, '../../uploads')
-
-        # Ensure the upload directory exists or create it
-        try:
-            os.makedirs(upload_path, exist_ok=True)
-        except OSError as e:
-            raise HTTPException(
-                status_code=500, detail=f"Failed to create directory: {str(e)}")
+        os.makedirs(upload_path, exist_ok=True)
+        logging.debug(f"Upload directory created/exists: {upload_path}")
 
         # Define the full file path
         file_path = os.path.join(upload_path, file.filename)
@@ -171,24 +217,45 @@ async def predict(file: UploadFile = File(...)):
         # Save the file temporarily
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
+        logging.debug(f"File saved temporarily: {file_path}")
 
-        # Extract features
+        # Step 1: Transcribe the audio to text
+        transcribed_text = get_raw_text_from_audio(file_path)
+        logging.debug(f"Transcribed text: {transcribed_text}")
+
+        # Step 2: Analyze the transcribed text using OpenAI for emotion
+        if transcribed_text == "Error":
+            # If speech was not recognized, log and proceed with voice tone analysis
+            logging.debug(
+                "Speech not recognized. Proceeding to voice tone analysis.")
+        else:
+            # Proceed with OpenAI analysis if no error occurred
+            detected_emotion = analyze_text_with_openai(transcribed_text)
+
+            # Step 3: If OpenAI detects an emotion, return it
+            if detected_emotion:
+                logging.debug(
+                    f"Emotion detected by OpenAI: {detected_emotion}")
+                os.remove(file_path)  # Clean up the file
+                return JSONResponse(content={"emotion": detected_emotion["emotion"]})
+            
+        # Step 4: If no emotion is detected from text, fallback to voice tone analysis
+        logging.debug(
+            "No valid emotion detected from OpenAI. Proceeding to voice tone analysis.")
         features = extract_features(file_path)
-
-        # Handle the case where no valid features were extracted
         if features is None:
+            logging.debug("Unable to identify valid features from audio.")
             os.remove(file_path)
             return JSONResponse(content={"emotion": "Unable to identify. Please provide a clearer audio sample."})
 
-        # Ensure the features are in the correct shape
         if features.shape[1] != model.n_features_in_:
+            print(
+                f"Feature shape mismatch: expected {model.n_features_in_}, got {features.shape[1]}")
             raise ValueError(
                 f"Feature shape mismatch: expected {model.n_features_in_}, got {features.shape[1]}")
 
         # Make the prediction
         prediction = model.predict(features)
-        print(prediction)
-
         # Ensure the prediction is properly handled
         prediction_value = prediction[0]
 
@@ -209,7 +276,7 @@ async def predict(file: UploadFile = File(...)):
         return JSONResponse(content={"emotion": predicted_emotion})
 
     except Exception as e:
-        # Clean up the uploaded file if an error occurs
+        print(f"Error during prediction: {e}")
         if os.path.exists(file_path):
             os.remove(file_path)
         raise HTTPException(
